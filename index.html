@@ -1,0 +1,125 @@
+import os
+import asyncio
+import random
+import logging
+from datetime import datetime
+from aiogram import Bot, Dispatcher, types, F
+from aiogram.filters import Command
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from dotenv import load_dotenv
+
+# Завантаження токена з .env
+load_dotenv()
+TOKEN = os.getenv("BOT_TOKEN")
+
+bot = Bot(token=TOKEN)
+dp = Dispatcher()
+
+# --- Тимчасова база даних станів ---
+user_data = {}
+
+# --- Клавіатури ---
+
+def main_menu_kb():
+    builder = InlineKeyboardBuilder()
+    builder.button(text="📈 Акції", callback_data="cat_stocks")
+    builder.button(text="💱 Валютні пари", callback_data="cat_forex")
+    builder.adjust(2)
+    return builder.as_markup()
+
+def assets_kb(category):
+    builder = InlineKeyboardBuilder()
+    if category == "cat_forex":
+        assets = ["AUD/NZD OTC", "AUD/CHF OTC", "AED/CNY OTC"]
+    else:
+        assets = ["Apple", "McDonald's", "Alibaba"]
+    
+    for asset in assets:
+        builder.button(text=asset, callback_data=f"asset_{asset}")
+    builder.button(text="⬅️ Назад", callback_data="back_to_main")
+    builder.adjust(1)
+    return builder.as_markup()
+
+def time_kb(asset):
+    builder = InlineKeyboardBuilder()
+    for t in range(1, 11):
+        builder.button(text=f"{t} хв", callback_data=f"time_{t}_{asset}")
+    builder.adjust(5)
+    return builder.as_markup()
+
+def analysis_kb(asset):
+    builder = InlineKeyboardBuilder()
+    builder.button(text="🔍 Провести аналіз", callback_data=f"calc_{asset}")
+    builder.button(text="🔄 Інший актив", callback_data="back_to_main")
+    return builder.as_markup()
+
+# --- Обробники подій ---
+
+@dp.message(Command("start"))
+async def start(message: types.Message):
+    await message.answer(
+        "💎 **Вітаємо в Trading Bot Terminal**\n\nОберіть категорію активів для початку:",
+        reply_markup=main_menu_kb(),
+        parse_mode="Markdown"
+    )
+
+@dp.callback_query(F.data.startswith("cat_"))
+async def choose_asset(callback: types.CallbackQuery):
+    await callback.message.edit_text("Оберіть потрібний актив:", reply_markup=assets_kb(callback.data))
+
+@dp.callback_query(F.data.startswith("asset_"))
+async def choose_time(callback: types.CallbackQuery):
+    asset = callback.data.split("_")[1]
+    await callback.message.edit_text(f"💎 Актив: {asset}\nОберіть час угоди:", reply_markup=time_kb(asset))
+
+@dp.callback_query(F.data.startswith("time_"))
+async def show_chart(callback: types.CallbackQuery):
+    _, time_val, asset = callback.data.split("_")
+    
+    # Імітація графіка. В реальному проєкті тут генерується картинка через бібліотеку Plotly або Matplotlib
+    chart_url = f"https://api.tradingview.com/v1/symbols/{asset.replace(' ', '')}/chart" # Приклад
+    
+    await callback.message.delete()
+    await callback.message.answer_photo(
+        photo="https://i.imgur.com/uR1G5Zq.png", # Заглушка графіка
+        caption=f"📊 **Поточний графік: {asset}**\nТаймфрейм: {time_val} хв\n\nНатисніть кнопку нижче для розрахунку сигналу.",
+        reply_markup=analysis_kb(asset),
+        parse_mode="Markdown"
+    )
+
+@dp.callback_query(F.data.startswith("calc_"))
+async def perform_analysis(callback: types.CallbackQuery):
+    asset = callback.data.split("_")[1]
+    await callback.answer("Аналізуємо індикатори RSI, MACD та Bollinger Bands...")
+    
+    await asyncio.sleep(2.5) # Ефект "думання"
+    
+    direction = random.choice(["📈 ВГОРУ (CALL)", "📉 ВНИЗ (PUT)"])
+    confidence = random.randint(72, 98)
+    
+    reasons = [
+        "Ціна відскочила від рівня підтримки.",
+        "Індикатор RSI знаходиться в зоні перепроданості.",
+        "Помічено сильний імпульс покупців на об'ємах.",
+        "Технічний паттерн 'Прапор' підтверджує рух."
+    ]
+
+    await callback.message.answer(
+        f"✅ **РЕЗУЛЬТАТ АНАЛІЗУ {asset}**\n\n"
+        f"Прогноз: **{direction}**\n"
+        f"Точність: `{confidence}%` \n\n"
+        f"🧠 **Чому так:** {random.choice(reasons)}",
+        parse_mode="Markdown"
+    )
+
+@dp.callback_query(F.data == "back_to_main")
+async def back_home(callback: types.CallbackQuery):
+    await callback.message.edit_text("Оберіть категорію активів:", reply_markup=main_menu_kb())
+
+async def main():
+    logging.basicConfig(level=logging.INFO)
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+    

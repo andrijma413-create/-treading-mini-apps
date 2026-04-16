@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trading Signals Terminal</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0e11;
+            --card-bg: #1e2329;
+            --text-main: #eaecef;
+            --accent-green: #02c076;
+            --accent-red: #f84960;
+            --button-color: #f0b90b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        .header {
+            background-color: var(--card-bg);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+
+        .container {
+            padding: 15px;
+        }
+
+        .signal-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 5px solid var(--accent-green);
+            text-align: left;
+        }
+
+        .pair {
+            font-weight: bold;
+            font-size: 1.2em;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .price {
+            color: var(--accent-green);
+        }
+
+        .status {
+            font-size: 0.8em;
+            background: rgba(2, 192, 118, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .main-button {
+            background-color: var(--button-color);
+            color: black;
+            border: none;
+            width: 100%;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .footer-text {
+            font-size: 12px;
+            color: #707a8a;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2 style="margin: 0; color: var(--button-color);">Treading Signals</h2>
+        <p style="font-size: 14px; margin: 5px 0 0;">Аналітика в реальному часі</p>
+    </div>
+
+    <div class="container">
+        <div class="signal-card">
+            <div class="pair">
+                <span>BTC / USDT</span>
+                <span class="status">LONG</span>
+            </div>
+            <p style="margin: 10px 0 5px;">Ціна входу: <span class="price">$64,250</span></p>
+            <p style="margin: 0; font-size: 13px; color: #707a8a;">Ціль: $67,000 | Стоп: $63,100</p>
+        </div>
+
+        <div class="signal-card" style="border-left-color: var(--accent-red);">
+            <div class="pair">
+                <span>ETH / USDT</span>
+                <span class="status" style="background: rgba(248, 73, 96, 0.2); color: var(--accent-red);">SHORT</span>
+            </div>
+            <p style="margin: 10px 0 5px;">Ціна входу: <span class="price" style="color: var(--accent-red);">$3,450</span></p>
+            <p style="margin: 0; font-size: 13px; color: #707a8a;">Ціль: $3,200 | Стоп: $3,580</p>
+        </div>
+
+        <button class="main-button" onclick="sendDataToBot()">Оновити сигнали</button>
+        
+        <p class="footer-text">Додаток для @Treading_on_bot</p>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Розгорнути на весь екран
+      
